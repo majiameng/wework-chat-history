@@ -27,6 +27,11 @@
 - MySQL 5.7+
 - Apache httpd 2.4+ 或者 Nginx 1.10+
 
+### 相关开源
+- [wework-chat-history](https://github.com/majiameng/wework-chat-history)	(php版，含数据入库，图形化)
+- [wework-msgaudit](https://github.com/majiameng/wework-msgaudit)	(Java版，含数据入库，无图形化)
+
+
 ## 企微聊天获取服务
 ```
 # 守护进程模式运行
@@ -67,6 +72,7 @@ http://127.0.0.1:8080/chat
 密码： 123456
 密码修改.env文件里的CHAT_PASSWORD
 ```
+
 
 合作联系：
 ![微信](images/wx.jpg)
