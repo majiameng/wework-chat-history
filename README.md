@@ -1,18 +1,24 @@
-# 企业微信聊天记录
+# 企业微信聊天记录(图形话)
 
 * 聊天记录自动拉取
 * 聊天记录图片自动下载并保存至【阿里云OSS、腾讯云COS、七牛云】云存储
 * 聊天记录自动分析群聊
 * 聊天记录展示功能
+* 数据同步、异步分析
+* 多组织企业微信
+* 自动匹配企业员工名称【开发ing】
+* 自动匹配企业客户名称【开发ing】
+* 与其他CRM项目自动挂载数据【开发ing】
 
 ## 截图
-![1.png](images/1.png)
-![2.png](images/2.png)
-![3.png](images/3.png)
+![登录认证](images/1.png)
+![聊天记录](images/2.png)
+![媒体文件](images/3.png)
 
 ## 软件架构
 使用语言 PHP 8.2
 基于 Laravel 8.7 框架
+项目基于 [tinymeng/wework-finance-sdk](https://github.com/majiameng/wework-finance-sdk-php)  扩展
 
 ## 环境要求
 - 独立服务器
@@ -61,3 +67,6 @@ http://127.0.0.1:8080/chat
 密码： 123456
 密码修改.env文件里的CHAT_PASSWORD
 ```
+
+商务联系：
+![微信](images/wx.png)
