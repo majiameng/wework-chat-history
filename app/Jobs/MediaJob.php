@@ -43,7 +43,9 @@ class MediaJob extends CommonJob
 
         // 上传文件到OSS
         $uploadConfig = config('upload');
-        $drive = Upload::oss($uploadConfig);
+        $drive = Upload::oss($uploadConfig);// 阿里云OSS
+//        $drive = Upload::cos($uploadConfig);// 腾讯云COS
+//        $drive = Upload::qiniu($uploadConfig);// 七牛云
         foreach ($list as $item) {
             try {
                 $mediaPath = $item['media_path'];
