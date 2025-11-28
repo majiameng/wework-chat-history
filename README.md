@@ -68,5 +68,5 @@ http://127.0.0.1:8080/chat
 密码修改.env文件里的CHAT_PASSWORD
 ```
 
-商务联系：
-![微信](images/wx.png)
+合作联系：
+![微信](images/wx.jpg)
