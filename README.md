@@ -16,9 +16,9 @@
 ![媒体文件](images/3.png)
 
 ## 软件架构
-使用语言 PHP 8.2
-基于 Laravel 8.7 框架
-项目基于 [tinymeng/wework-finance-sdk](https://github.com/majiameng/wework-finance-sdk-php)  扩展
+* 使用语言 PHP 8.2
+* 基于 Laravel 8.7 框架
+* 项目基于 [tinymeng/wework-finance-sdk](https://github.com/majiameng/wework-finance-sdk-php)  扩展
 
 ## 环境要求
 - 独立服务器
