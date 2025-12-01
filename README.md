@@ -75,4 +75,4 @@ http://127.0.0.1:8080/chat
 
 
 合作联系：
-![微信](images/wx.jpg)
+<img src="images/wx.jpg" alt="微信" style="width: 300px">
