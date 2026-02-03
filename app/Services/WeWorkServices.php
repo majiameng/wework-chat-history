@@ -6,6 +6,7 @@ use App\Jobs\MessageAnalyzeJob;
 use App\Models\CompanyModel;
 use App\Models\MediaModel;
 use App\Models\MessageOriginalModel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use tinymeng\WeWorkFinanceSDK\WxFinanceSDK;
 
@@ -23,8 +24,8 @@ class WeWorkServices
         $where = [
             'status' => 1,
         ];
-        $corpList = CompanyModel::where($where)->get();
-        foreach ($corpList as $value){
+        $companyList = CompanyModel::where($where)->get();
+        foreach ($companyList as $value){
             $this->execCompany($value);
         }
     }
@@ -35,8 +36,9 @@ class WeWorkServices
      */
     public function execCompany($value)
     {
+        DB::beginTransaction();
         // 获取最新seq
-        $seq = MessageOriginalModel::where('company_id',$value['company_id'])->max('seq')??0;
+        $seq = $value['seq']??0;
         // 企业配置
         $corpConfig = [
             'corpid'       => $value['corpid'],
@@ -57,8 +59,13 @@ class WeWorkServices
         }
         // 批量保存消息数据到数据库
         if (!empty($messages) && is_array($messages)) {
-            $this->batchSaveMessages($messages,$value['company_id']);
+            $seq = $this->batchSaveMessages($messages,$value['company_id']);
+
+            // 存储最后seq
+            $value->seq = $seq;
+            $value->save();
         }
+        DB::commit();
     }
 
     /**
@@ -68,11 +75,13 @@ class WeWorkServices
      */
     private function batchSaveMessages($messages,$companyId)
     {
+        $seq = 0;
         $dataList = [];
         $mediaList = [];
 
         foreach ($messages as $message) {
             $media = $message['media'] ?? '';
+            $seq = $message['seq'] ?? 0;
             // 准备保存的数据
             $data = [
                 'company_id' => $companyId,
@@ -170,6 +179,7 @@ class WeWorkServices
             // 发布消息分析任务
             $this->messageAnalyze(array_column($dataList,'msgid'));
         }
+        return $seq;
     }
 
     /**

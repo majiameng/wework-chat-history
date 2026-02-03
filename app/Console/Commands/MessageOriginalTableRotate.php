@@ -42,7 +42,7 @@ class MessageOriginalTableRotate extends CommonCommand
     {
         $today = Carbon::now();
         $force = $this->option('force');
-        
+
         // 检查是否是每月1号（除非强制执行）
         if (!$force && $today->day != 1) {
             $this->writeln('今天不是1号，跳过表轮转操作（使用 --force 参数可强制执行）');
@@ -84,11 +84,11 @@ class MessageOriginalTableRotate extends CommonCommand
             $this->writeln("正在创建新表结构...");
             $tempNewTableName = $originalTableName . '_new';
             $this->createNewTable($tempNewTableName, $originalTableName, $prefix);
-            
+
             // 原子性重命名：在一个语句中完成两个重命名操作（MySQL的RENAME TABLE是原子操作）
             // 这样可以最小化对正在运行的任务的影响
             $this->writeln("正在执行原子性表重命名操作（此操作会短暂锁定表）...");
-            $sql = "RENAME TABLE 
+            $sql = "RENAME TABLE
                     `{$prefix}{$originalTableName}` TO `{$prefix}{$newTableName}`,
                     `{$prefix}{$tempNewTableName}` TO `{$prefix}{$originalTableName}`";
             DB::statement($sql);
@@ -124,9 +124,9 @@ class MessageOriginalTableRotate extends CommonCommand
         $prefix = $connection->getTablePrefix();
         $fullTableName = $prefix . $tableName;
 
-        $sql = "SELECT COUNT(*) as count FROM information_schema.tables 
+        $sql = "SELECT COUNT(*) as count FROM information_schema.tables
                 WHERE table_schema = ? AND table_name = ?";
-        
+
         $result = DB::select($sql, [$databaseName, $fullTableName]);
         return $result[0]->count > 0;
     }
@@ -143,28 +143,28 @@ class MessageOriginalTableRotate extends CommonCommand
         $connection = DB::connection();
         $databaseName = $connection->getDatabaseName();
         $fullTableName = $prefix . $tableName;
-        
+
         $startTime = time();
         $checkInterval = 2; // 每2秒检查一次
-        
+
         while (true) {
             // 检查是否有正在进行的查询
-            $sql = "SELECT COUNT(*) as count FROM information_schema.processlist 
+            $sql = "SELECT COUNT(*) as count FROM information_schema.processlist
                     WHERE db = ? AND (info LIKE ? OR info LIKE ?) AND command != 'Sleep'";
-            
+
             $result = DB::select($sql, [
                 $databaseName,
                 "%`{$fullTableName}`%",
                 "%{$tableName}%"
             ]);
-            
+
             $activeQueries = $result[0]->count ?? 0;
-            
-            if ($activeQueries == 0) {
+
+            if ($activeQueries == 1) {
                 $this->writeln("表 {$tableName} 当前无活跃查询，可以安全执行轮转");
                 break;
             }
-            
+
             $elapsed = time() - $startTime;
             if ($elapsed >= $maxWaitSeconds) {
                 $this->writeln("警告：等待超时（{$maxWaitSeconds}秒），仍有 {$activeQueries} 个活跃查询，继续执行可能影响正在运行的任务");
@@ -174,7 +174,7 @@ class MessageOriginalTableRotate extends CommonCommand
                 }
                 break;
             }
-            
+
             $this->writeln("检测到 {$activeQueries} 个活跃查询，等待中... ({$elapsed}/{$maxWaitSeconds}秒)");
             sleep($checkInterval);
         }
@@ -202,7 +202,7 @@ class MessageOriginalTableRotate extends CommonCommand
             $databaseName = $connection->getDatabaseName();
             $sql = "SHOW CREATE TABLE `{$prefix}{$sourceTableName}`";
             $result = DB::select($sql);
-            
+
             if (!empty($result)) {
                 $createTableSql = $result[0]->{'Create Table'};
                 // 替换表名
@@ -213,7 +213,7 @@ class MessageOriginalTableRotate extends CommonCommand
                 );
                 // 移除 AUTO_INCREMENT 值（让新表从1开始）
                 $createTableSql = preg_replace('/AUTO_INCREMENT=\d+/', '', $createTableSql);
-                
+
                 DB::statement($createTableSql);
                 $this->writeln("已创建新表：{$newTableName}（结构复制自 {$sourceTableName}）");
             } else {
