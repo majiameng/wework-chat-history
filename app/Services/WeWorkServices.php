@@ -18,6 +18,10 @@ class WeWorkServices
      * @var bool
      */
     public $async = false;
+    /**
+     * @var WxFinanceSDK
+     */
+    private $client;
 
     public function index()
     {
@@ -48,15 +52,16 @@ class WeWorkServices
                 1 => $value['prikey'],
             ],
         ];
-        $wxFinanceSDK = WxFinanceSDK::init($corpConfig, ['default'   => 'php-ffi',]);
+        $this->client = WxFinanceSDK::init($corpConfig, ['default'   => 'php-ffi',]);
         // 获取会话记录数据(解密)
-        $messages = $wxFinanceSDK->getDecryptChatData($seq,$value['limits']);
+        $messages = $this->client->getDecryptChatData($seq,$value['limits']);
         // 下载媒体资源
         foreach ($messages as $key=>$message){
-            if(!empty($message['msgtype']) && $wxFinanceSDK->isMedia($message['msgtype'])){
-                $messages[$key]['media'] = $wxFinanceSDK->getDownloadMediaData($message[$message['msgtype']],$message['msgtype']);
+            if(!empty($message['msgtype']) && $this->client->isMedia($message['msgtype'])){
+                $messages[$key]['media'] = $this->downloadMediaData($message[$message['msgtype']],$message['msgtype']);
             }
         }
+
         // 批量保存消息数据到数据库
         if (!empty($messages) && is_array($messages)) {
             $seq = $this->batchSaveMessages($messages,$value['company_id']);
@@ -66,6 +71,37 @@ class WeWorkServices
             $value->save();
         }
         DB::commit();
+    }
+
+    /**
+     * 获取文件
+     * @param $message
+     * @param $msgType
+     * @return string|void
+     */
+    public function downloadMediaData($message,$msgType)
+    {
+        $maxRetries = 3;
+        $retryCount = 0;
+        while ($retryCount < $maxRetries) {
+            try {
+                return $this->client->getDownloadMediaData($message, $msgType);
+            } catch (\Exception $e) {
+                $retryCount++;
+                Log::error('下载媒体资源失败 (第' . $retryCount . '次): ' . $e->getMessage(), [
+                    'message' => $message,
+                    'error' => $e->getTraceAsString()
+                ]);
+
+                if ($retryCount >= $maxRetries) {
+                    Log::error('下载媒体资源最终失败，已达到最大重试次数', [
+                        'message' => $message,
+                        'error' => $e->getTraceAsString()
+                    ]);
+                    return '';
+                }
+            }
+        }
     }
 
     /**
